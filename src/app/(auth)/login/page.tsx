@@ -28,9 +28,9 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center"
+        <div className="min-h-[100dvh] flex items-center justify-center px-4 py-8"
             style={{ background: "linear-gradient(135deg, var(--wa-teal) 0%, var(--wa-green-dark) 100%)" }}>
-            <div className="w-full max-w-md mx-4">
+            <div className="w-full max-w-md animate-fade-in">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center"
@@ -44,7 +44,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form Card */}
-                <div className="rounded-lg shadow-2xl p-8" style={{ backgroundColor: "var(--wa-sidebar-bg)" }}>
+                <div className="rounded-2xl shadow-2xl p-6 sm:p-8" style={{ backgroundColor: "var(--wa-sidebar-bg)" }}>
                     <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: "var(--wa-text)" }}>
                         Sign in to your account
                     </h2>

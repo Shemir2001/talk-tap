@@ -83,7 +83,7 @@ export function MessageBubble({
             }}
         >
             <div
-                className={`relative max-w-[65%] px-2 pt-1.5 pb-1 rounded-lg shadow-sm ${isFirst ? (isOwn ? "message-tail-out" : "message-tail-in") : ""
+                className={`relative max-w-[85%] sm:max-w-[65%] px-2 pt-1.5 pb-1 rounded-lg shadow-sm ${isFirst ? (isOwn ? "message-tail-out" : "message-tail-in") : ""
                     }`}
                 style={{
                     backgroundColor: isOwn ? "var(--wa-message-out)" : "var(--wa-message-in)",

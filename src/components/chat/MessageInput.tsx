@@ -17,7 +17,7 @@ type PendingAttachment = {
     filename: string;
     mimeType: string;
     size: number;
-    previewUrl?: string; // local blob preview for images
+    previewUrl?: string;
 };
 
 const EMOJI_LIST = ["😀", "😂", "🥹", "😍", "🤩", "😎", "🥳", "😤", "🤔", "🤗", "😴", "🙄", "😬", "🤮", "👿", "💀", "👻", "👽", "🤖", "💩", "👍", "👎", "👏", "🙏", "💪", "❤️", "🔥", "⭐", "💯", "🎉", "🎊", "🏆", "🌟", "💫", "✨", "⚡", "🌈", "☀️", "🌙", "🌸", "🍕", "🍔", "☕", "🎵", "📷", "💻", "📱", "✈️"];
@@ -37,7 +37,6 @@ export function MessageInput({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Auto-focus on reply
     useEffect(() => {
         if (replyTo) {
             inputRef.current?.focus();
@@ -54,12 +53,10 @@ export function MessageInput({
         if (!text.trim() && !pendingAttachment) return;
 
         if (pendingAttachment) {
-            // Send with attachment - strip previewUrl (client-only field)
             const { previewUrl, ...attachmentData } = pendingAttachment;
             onSend(text.trim(), [attachmentData]);
             setPendingAttachment(null);
         } else {
-            // Text only
             onSend(text.trim());
         }
 
@@ -93,7 +90,6 @@ export function MessageInput({
 
                 if (res.ok) {
                     const data = await res.json();
-                    // Create local preview for images
                     const previewUrl = file.type.startsWith("image/")
                         ? URL.createObjectURL(file)
                         : undefined;
@@ -115,7 +111,6 @@ export function MessageInput({
         setPendingAttachment(null);
     }, [pendingAttachment]);
 
-    // Auto-resize textarea
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.target.value);
         handleTyping();
@@ -129,10 +124,10 @@ export function MessageInput({
             {/* Reply bar */}
             {replyTo && (
                 <div
-                    className="flex items-center gap-3 px-4 py-2 border-b animate-fade-in"
+                    className="flex items-center gap-3 px-3 sm:px-4 py-2 border-b animate-slide-up"
                     style={{ borderColor: "var(--wa-border)" }}
                 >
-                    <div className="w-1 h-10 rounded-full" style={{ backgroundColor: "var(--wa-green)" }} />
+                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: "var(--wa-green)" }} />
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium" style={{ color: "var(--wa-green)" }}>
                             {replyTo.sender.name}
@@ -141,8 +136,8 @@ export function MessageInput({
                             {replyTo.body || "📎 Attachment"}
                         </p>
                     </div>
-                    <button onClick={onCancelReply} className="p-1">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
+                    <button onClick={onCancelReply} className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
@@ -152,18 +147,18 @@ export function MessageInput({
             {/* Attachment preview */}
             {pendingAttachment && (
                 <div
-                    className="flex items-center gap-3 px-4 py-3 border-b animate-fade-in"
+                    className="flex items-center gap-3 px-3 sm:px-4 py-3 border-b animate-slide-up"
                     style={{ borderColor: "var(--wa-border)" }}
                 >
-                    <div className="w-1 h-16 rounded-full" style={{ backgroundColor: "var(--wa-green)" }} />
+                    <div className="w-1 h-14 rounded-full flex-shrink-0" style={{ backgroundColor: "var(--wa-green)" }} />
                     {pendingAttachment.previewUrl ? (
                         <img
                             src={pendingAttachment.previewUrl}
                             alt={pendingAttachment.filename}
-                            className="w-16 h-16 rounded-lg object-cover"
+                            className="w-14 h-14 rounded-lg object-cover shadow-sm"
                         />
                     ) : (
-                        <div className="w-16 h-16 rounded-lg flex items-center justify-center"
+                        <div className="w-14 h-14 rounded-lg flex items-center justify-center"
                             style={{ backgroundColor: "var(--wa-hover)" }}>
                             <span className="text-2xl">📄</span>
                         </div>
@@ -172,12 +167,12 @@ export function MessageInput({
                         <p className="text-sm font-medium truncate" style={{ color: "var(--wa-text)" }}>
                             {pendingAttachment.filename}
                         </p>
-                        <p className="text-xs" style={{ color: "var(--wa-text-secondary)" }}>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--wa-text-secondary)" }}>
                             {formatFileSize(pendingAttachment.size)}
                         </p>
                     </div>
-                    <button onClick={cancelAttachment} className="p-1.5 rounded-full hover:bg-black/5">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
+                    <button onClick={cancelAttachment} className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
@@ -187,10 +182,10 @@ export function MessageInput({
             {/* Emoji picker */}
             {showEmoji && (
                 <div
-                    className="border-b px-4 py-3 animate-fade-in"
+                    className="border-b px-3 sm:px-4 py-3 animate-slide-up"
                     style={{ borderColor: "var(--wa-border)" }}
                 >
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-0.5">
                         {EMOJI_LIST.map((emoji) => (
                             <button
                                 key={emoji}
@@ -198,7 +193,7 @@ export function MessageInput({
                                     setText((prev) => prev + emoji);
                                     inputRef.current?.focus();
                                 }}
-                                className="text-xl hover:scale-125 transition-transform p-1"
+                                className="text-xl hover:scale-125 transition-transform p-1 rounded"
                             >
                                 {emoji}
                             </button>
@@ -208,13 +203,13 @@ export function MessageInput({
             )}
 
             {/* Input area */}
-            <div className="flex items-end gap-2 px-4 py-3">
+            <div className="flex items-end gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3">
                 {/* Emoji button */}
                 <button
                     onClick={() => setShowEmoji(!showEmoji)}
-                    className="p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0"
+                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex-shrink-0"
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="1.5">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="1.5">
                         <circle cx="12" cy="12" r="10" />
                         <path d="M8 14s1.5 2 4 2 4-2 4-2" />
                         <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth="3" strokeLinecap="round" />
@@ -225,16 +220,16 @@ export function MessageInput({
                 {/* File attach */}
                 <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0"
+                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex-shrink-0"
                     disabled={isUploading}
                 >
                     {isUploading ? (
-                        <svg className="animate-spin h-6 w-6" style={{ color: "var(--wa-text-secondary)" }} viewBox="0 0 24 24">
+                        <svg className="animate-spin h-[22px] w-[22px]" style={{ color: "var(--wa-text-secondary)" }} viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                     ) : (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="1.5">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="1.5">
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                         </svg>
                     )}
@@ -252,7 +247,7 @@ export function MessageInput({
                 />
 
                 {/* Text input */}
-                <div className="flex-1 rounded-lg px-3 py-2" style={{ backgroundColor: "var(--wa-input-bg)" }}>
+                <div className="flex-1 rounded-xl px-3 py-2" style={{ backgroundColor: "var(--wa-input-bg)" }}>
                     <textarea
                         ref={inputRef}
                         value={text}
@@ -273,9 +268,9 @@ export function MessageInput({
                 <button
                     onClick={handleSend}
                     disabled={!text.trim() && !pendingAttachment}
-                    className="p-2 rounded-full transition-colors flex-shrink-0 disabled:opacity-30"
+                    className="p-2 rounded-full transition-all flex-shrink-0 disabled:opacity-30 hover:scale-105 active:scale-95"
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--wa-text-secondary)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--wa-text-secondary)">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                     </svg>
                 </button>

@@ -11,36 +11,36 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q");
 
-    if (query) {
-        // Search users
-        const users = await prisma.user.findMany({
-            where: {
-                AND: [
-                    { id: { not: session.user.id } },
-                    {
-                        OR: [
-                            { name: { contains: query, mode: "insensitive" } },
-                            { email: { contains: query, mode: "insensitive" } },
-                        ],
-                    },
-                ],
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                bio: true,
-                lastSeen: true,
-                isOnline: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-            take: 20,
-        });
+    const users = await prisma.user.findMany({
+        where: {
+            AND: [
+                { id: { not: session.user.id } },
+                ...(query
+                    ? [
+                        {
+                            OR: [
+                                { name: { contains: query, mode: "insensitive" as const } },
+                                { email: { contains: query, mode: "insensitive" as const } },
+                            ],
+                        },
+                    ]
+                    : []),
+            ],
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            bio: true,
+            lastSeen: true,
+            isOnline: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+        take: 50,
+        orderBy: { name: "asc" },
+    });
 
-        return NextResponse.json({ users });
-    }
-
-    return NextResponse.json({ users: [] });
+    return NextResponse.json({ users });
 }

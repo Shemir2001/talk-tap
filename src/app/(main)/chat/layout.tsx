@@ -81,9 +81,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             setSelectedConversationId(conversationId);
             router.push(`/chat/${conversationId}`);
             // On mobile, hide sidebar
-            if (window.innerWidth < 768) {
-                setShowSidebar(false);
-            }
+            setShowSidebar(false);
         },
         [router]
     );
@@ -97,31 +95,41 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     if (status === "loading") {
         return (
             <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "var(--wa-bg)" }}>
-                <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                <div className="text-center animate-fade-in">
+                    <div className="w-20 h-20 mx-auto mb-5 rounded-full flex items-center justify-center animate-pulse-green"
                         style={{ backgroundColor: "var(--wa-green)" }}>
-                        <svg viewBox="0 0 39 39" width="32" height="32" fill="white">
+                        <svg viewBox="0 0 39 39" width="40" height="40" fill="white">
                             <path d="M10.7 32.8l.6.3c2.5 1.5 5.3 2.2 8.1 2.2 8.8 0 16-7.2 16-16 0-4.2-1.7-8.3-4.7-11.3s-7-4.7-11.3-4.7c-8.8 0-16 7.2-15.9 16.1 0 3 .9 5.9 2.4 8.4l.4.6-1.6 5.9 6-1.5z" />
                         </svg>
                     </div>
-                    <p style={{ color: "var(--wa-text-secondary)" }}>Loading WhatsApp...</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--wa-text-secondary)" }}>Loading WhatsApp...</p>
+                    <div className="mt-3 flex justify-center gap-1">
+                        <div className="w-2 h-2 rounded-full typing-dot" style={{ backgroundColor: "var(--wa-green)" }} />
+                        <div className="w-2 h-2 rounded-full typing-dot" style={{ backgroundColor: "var(--wa-green)" }} />
+                        <div className="w-2 h-2 rounded-full typing-dot" style={{ backgroundColor: "var(--wa-green)" }} />
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex overflow-hidden" style={{ backgroundColor: "var(--wa-bg)" }}>
-            {/* Top green bar */}
-            <div className="fixed top-0 left-0 right-0 h-32 z-0" style={{ backgroundColor: "var(--wa-teal)" }} />
+        <div className="h-[100dvh] flex overflow-hidden" style={{ backgroundColor: "var(--wa-bg)" }}>
+            {/* Top green bar - hidden on mobile */}
+            <div className="fixed top-0 left-0 right-0 h-32 z-0 hidden md:block" style={{ backgroundColor: "var(--wa-teal)" }} />
 
             {/* Main container */}
-            <div className="relative z-10 flex w-full max-w-[1600px] mx-auto my-4 shadow-xl rounded-sm overflow-hidden"
-                style={{ height: "calc(100vh - 2rem)" }}>
+            <div className="relative z-10 flex w-full max-w-[1600px] mx-auto md:my-4 md:shadow-2xl md:rounded-sm overflow-hidden"
+                style={{ height: "100dvh" }}>
+
                 {/* Sidebar */}
                 <div
-                    className={`${showSidebar ? "flex" : "hidden md:flex"
-                        } flex-col w-full md:w-[420px] md:min-w-[340px] border-r`}
+                    className={`
+                        absolute inset-0 z-20 md:relative md:z-auto
+                        md:w-[420px] md:min-w-[340px] md:max-w-[420px]
+                        flex flex-col border-r transition-transform duration-300 ease-out
+                        ${showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+                    `}
                     style={{ backgroundColor: "var(--wa-sidebar-bg)", borderColor: "var(--wa-border)" }}
                 >
                     <Sidebar
@@ -138,8 +146,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
                 {/* Chat area */}
                 <div
-                    className={`${!showSidebar ? "flex" : "hidden md:flex"
-                        } flex-1 flex-col min-w-0`}
+                    className="flex-1 flex flex-col min-w-0 w-full"
                     style={{ backgroundColor: "var(--wa-chat-bg)" }}
                 >
                     {children}
