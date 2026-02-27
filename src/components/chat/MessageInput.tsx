@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { formatFileSize } from "@/lib/utils";
 import type { MessageWithSender } from "@/types";
 
 interface MessageInputProps {
@@ -10,6 +11,14 @@ interface MessageInputProps {
     replyTo: MessageWithSender | null;
     onCancelReply: () => void;
 }
+
+type PendingAttachment = {
+    url: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+    previewUrl?: string; // local blob preview for images
+};
 
 const EMOJI_LIST = ["😀", "😂", "🥹", "😍", "🤩", "😎", "🥳", "😤", "🤔", "🤗", "😴", "🙄", "😬", "🤮", "👿", "💀", "👻", "👽", "🤖", "💩", "👍", "👎", "👏", "🙏", "💪", "❤️", "🔥", "⭐", "💯", "🎉", "🎊", "🏆", "🌟", "💫", "✨", "⚡", "🌈", "☀️", "🌙", "🌸", "🍕", "🍔", "☕", "🎵", "📷", "💻", "📱", "✈️"];
 
@@ -23,6 +32,7 @@ export function MessageInput({
     const [text, setText] = useState("");
     const [showEmoji, setShowEmoji] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,13 +51,23 @@ export function MessageInput({
     }, [onTyping, onStopTyping]);
 
     const handleSend = useCallback(() => {
-        if (!text.trim() && !isUploading) return;
-        onSend(text.trim());
+        if (!text.trim() && !pendingAttachment) return;
+
+        if (pendingAttachment) {
+            // Send with attachment - strip previewUrl (client-only field)
+            const { previewUrl, ...attachmentData } = pendingAttachment;
+            onSend(text.trim(), [attachmentData]);
+            setPendingAttachment(null);
+        } else {
+            // Text only
+            onSend(text.trim());
+        }
+
         setText("");
         setShowEmoji(false);
         onStopTyping();
         inputRef.current?.focus();
-    }, [text, isUploading, onSend, onStopTyping]);
+    }, [text, pendingAttachment, onSend, onStopTyping]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
@@ -59,7 +79,7 @@ export function MessageInput({
         [handleSend]
     );
 
-    const handleFileUpload = useCallback(
+    const handleFileSelect = useCallback(
         async (file: File) => {
             setIsUploading(true);
             try {
@@ -73,7 +93,11 @@ export function MessageInput({
 
                 if (res.ok) {
                     const data = await res.json();
-                    onSend("", [data]);
+                    // Create local preview for images
+                    const previewUrl = file.type.startsWith("image/")
+                        ? URL.createObjectURL(file)
+                        : undefined;
+                    setPendingAttachment({ ...data, previewUrl });
                 }
             } catch (error) {
                 console.error("Upload error:", error);
@@ -81,8 +105,15 @@ export function MessageInput({
                 setIsUploading(false);
             }
         },
-        [onSend]
+        []
     );
+
+    const cancelAttachment = useCallback(() => {
+        if (pendingAttachment?.previewUrl) {
+            URL.revokeObjectURL(pendingAttachment.previewUrl);
+        }
+        setPendingAttachment(null);
+    }, [pendingAttachment]);
 
     // Auto-resize textarea
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -112,6 +143,41 @@ export function MessageInput({
                     </div>
                     <button onClick={onCancelReply} className="p-1">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
+            {/* Attachment preview */}
+            {pendingAttachment && (
+                <div
+                    className="flex items-center gap-3 px-4 py-3 border-b animate-fade-in"
+                    style={{ borderColor: "var(--wa-border)" }}
+                >
+                    <div className="w-1 h-16 rounded-full" style={{ backgroundColor: "var(--wa-green)" }} />
+                    {pendingAttachment.previewUrl ? (
+                        <img
+                            src={pendingAttachment.previewUrl}
+                            alt={pendingAttachment.filename}
+                            className="w-16 h-16 rounded-lg object-cover"
+                        />
+                    ) : (
+                        <div className="w-16 h-16 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: "var(--wa-hover)" }}>
+                            <span className="text-2xl">📄</span>
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: "var(--wa-text)" }}>
+                            {pendingAttachment.filename}
+                        </p>
+                        <p className="text-xs" style={{ color: "var(--wa-text-secondary)" }}>
+                            {formatFileSize(pendingAttachment.size)}
+                        </p>
+                    </div>
+                    <button onClick={cancelAttachment} className="p-1.5 rounded-full hover:bg-black/5">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--wa-text-secondary)" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
@@ -180,7 +246,7 @@ export function MessageInput({
                     accept="image/*,.pdf,.doc,.docx"
                     onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file);
+                        if (file) handleFileSelect(file);
                         e.target.value = "";
                     }}
                 />
@@ -192,7 +258,7 @@ export function MessageInput({
                         value={text}
                         onChange={handleInput}
                         onKeyDown={handleKeyDown}
-                        placeholder="Type a message"
+                        placeholder={pendingAttachment ? "Add a caption..." : "Type a message"}
                         rows={1}
                         className="w-full resize-none outline-none text-sm leading-5"
                         style={{
@@ -206,7 +272,7 @@ export function MessageInput({
                 {/* Send button */}
                 <button
                     onClick={handleSend}
-                    disabled={!text.trim() && !isUploading}
+                    disabled={!text.trim() && !pendingAttachment}
                     className="p-2 rounded-full transition-colors flex-shrink-0 disabled:opacity-30"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--wa-text-secondary)">

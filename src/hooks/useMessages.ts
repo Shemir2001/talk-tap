@@ -72,9 +72,13 @@ export function useMessages(
         const handleNewMessage = (message: MessageWithSender) => {
             if (message.conversationId === conversationId) {
                 setMessages((prev) => {
-                    // Avoid duplicates
+                    // Avoid exact duplicates
                     if (prev.some((m) => m.id === message.id)) return prev;
-                    return [...prev, message];
+                    // Replace optimistic temp message from same sender
+                    const filtered = prev.filter(
+                        (m) => !(m.id.startsWith("temp-") && m.senderId === message.senderId)
+                    );
+                    return [...filtered, message];
                 });
             }
         };
@@ -147,7 +151,7 @@ export function useMessages(
                             return {
                                 ...m,
                                 reactions: m.reactions.filter(
-                                    (r:any) =>
+                                    (r: any) =>
                                         !(r.userId === data.userId && r.emoji === data.emoji)
                                 ),
                             };
@@ -157,16 +161,34 @@ export function useMessages(
             }
         };
 
+        const handleMessagesRead = (data: {
+            conversationId: string;
+            userId: string;
+            messageIds: string[];
+        }) => {
+            if (data.conversationId === conversationId) {
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        data.messageIds.includes(m.id)
+                            ? { ...m, _count: { reads: (m._count?.reads || 0) + 1 } }
+                            : m
+                    )
+                );
+            }
+        };
+
         const unsub1 = on("newMessage", handleNewMessage);
         const unsub2 = on("messageDeleted", handleMessageDeleted);
         const unsub3 = on("messageEdited", handleMessageEdited);
         const unsub4 = on("messageReaction", handleMessageReaction);
+        const unsub5 = on("messagesRead", handleMessagesRead);
 
         return () => {
             unsub1();
             unsub2();
             unsub3();
             unsub4();
+            unsub5();
         };
     }, [conversationId, on]);
 

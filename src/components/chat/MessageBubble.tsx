@@ -59,7 +59,7 @@ export function MessageBubble({
 
     // Group reactions by emoji
     const reactionGroups: { emoji: string; count: number; hasOwn: boolean }[] = [];
-    message.reactions?.forEach((r:any) => {
+    message.reactions?.forEach((r: any) => {
         const existing = reactionGroups.find((g) => g.emoji === r.emoji);
         if (existing) {
             existing.count++;
@@ -129,7 +129,7 @@ export function MessageBubble({
                 {/* Attachments */}
                 {message.attachments?.length > 0 && (
                     <div className="mb-1">
-                        {message.attachments.map((att:any) => (
+                        {message.attachments.map((att: any) => (
                             <div key={att.id} className="mb-1">
                                 {att.mimeType.startsWith("image/") ? (
                                     <img
@@ -180,12 +180,14 @@ export function MessageBubble({
                             ✕
                         </button>
                     </div>
-                ) : message.body ? (
+                ) : (
                     <div className="flex items-end gap-2">
-                        <p className="text-sm whitespace-pre-wrap break-words" style={{ color: "var(--wa-text)" }}>
-                            {message.body}
-                        </p>
-                        <span className="flex items-center gap-0.5 flex-shrink-0 pb-0.5">
+                        {message.body && (
+                            <p className="text-sm whitespace-pre-wrap break-words" style={{ color: "var(--wa-text)" }}>
+                                {message.body}
+                            </p>
+                        )}
+                        <span className="flex items-center gap-0.5 flex-shrink-0 pb-0.5 ml-auto">
                             {message.isEdited && (
                                 <span className="text-[10px] italic" style={{ color: "var(--wa-text-secondary)" }}>
                                     edited
@@ -195,23 +197,50 @@ export function MessageBubble({
                                 {formatTime(message.createdAt)}
                             </span>
                             {isOwn && (
-                                <svg width="16" height="11" viewBox="0 0 16 11" className="ml-0.5">
-                                    <path
-                                        d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.011-2.095a.463.463 0 0 0-.36-.186.465.465 0 0 0-.344.153l-.311.341a.514.514 0 0 0-.14.358c0 .143.057.269.14.358l2.7 2.813c.098.098.219.163.36.163a.527.527 0 0 0 .39-.175l6.835-8.434a.49.49 0 0 0 .123-.34.477.477 0 0 0-.14-.333z"
-                                        fill="var(--wa-blue)"
-                                    />
-                                    <path
-                                        d="M15.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-1.2-1.25-.313.344 1.865 1.943c.098.098.219.163.36.163a.527.527 0 0 0 .39-.175l6.835-8.434a.49.49 0 0 0 .123-.34.477.477 0 0 0-.14-.333z"
-                                        fill="var(--wa-blue)"
-                                    />
-                                </svg>
+                                (() => {
+                                    const isSending = message.id.startsWith("temp-");
+                                    const readCount = message._count?.reads || 0;
+                                    const isSeen = readCount > 0;
+
+                                    if (isSending) {
+                                        // Clock icon - sending
+                                        return (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="ml-0.5">
+                                                <circle cx="12" cy="12" r="9" stroke="var(--wa-text-secondary)" strokeWidth="1.5" />
+                                                <path d="M12 7v5l3 3" stroke="var(--wa-text-secondary)" strokeWidth="1.5" strokeLinecap="round" />
+                                            </svg>
+                                        );
+                                    }
+
+                                    if (isSeen) {
+                                        // Double blue tick - seen
+                                        return (
+                                            <svg width="16" height="11" viewBox="0 0 16 11" className="ml-0.5">
+                                                <path
+                                                    d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.011-2.095a.463.463 0 0 0-.36-.186.465.465 0 0 0-.344.153l-.311.341a.514.514 0 0 0-.14.358c0 .143.057.269.14.358l2.7 2.813c.098.098.219.163.36.163a.527.527 0 0 0 .39-.175l6.835-8.434a.49.49 0 0 0 .123-.34.477.477 0 0 0-.14-.333z"
+                                                    fill="var(--wa-blue)"
+                                                />
+                                                <path
+                                                    d="M15.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-1.2-1.25-.313.344 1.865 1.943c.098.098.219.163.36.163a.527.527 0 0 0 .39-.175l6.835-8.434a.49.49 0 0 0 .123-.34.477.477 0 0 0-.14-.333z"
+                                                    fill="var(--wa-blue)"
+                                                />
+                                            </svg>
+                                        );
+                                    }
+
+                                    // Single grey tick - sent but not read
+                                    return (
+                                        <svg width="12" height="11" viewBox="0 0 12 11" className="ml-0.5">
+                                            <path
+                                                d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.011-2.095a.463.463 0 0 0-.36-.186.465.465 0 0 0-.344.153l-.311.341a.514.514 0 0 0-.14.358c0 .143.057.269.14.358l2.7 2.813c.098.098.219.163.36.163a.527.527 0 0 0 .39-.175l6.835-8.434a.49.49 0 0 0 .123-.34.477.477 0 0 0-.14-.333z"
+                                                fill="var(--wa-text-secondary)"
+                                            />
+                                        </svg>
+                                    );
+                                })()
                             )}
                         </span>
                     </div>
-                ) : (
-                    <span className="text-[10px]" style={{ color: "var(--wa-text-secondary)" }}>
-                        {formatTime(message.createdAt)}
-                    </span>
                 )}
 
                 {/* Reactions */}
