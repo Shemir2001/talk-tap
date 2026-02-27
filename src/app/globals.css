@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+:root {
+  --wa-green: #00a884;
+  --wa-green-dark: #008069;
+  --wa-green-light: #d9fdd3;
+  --wa-teal: #075e54;
+  --wa-teal-dark: #054640;
+  --wa-blue: #53bdeb;
+  --wa-bg: #efeae2;
+  --wa-bg-pattern: #d1d7db;
+  --wa-sidebar-bg: #ffffff;
+  --wa-chat-bg: #efeae2;
+  --wa-header-bg: #f0f2f5;
+  --wa-input-bg: #ffffff;
+  --wa-message-out: #d9fdd3;
+  --wa-message-in: #ffffff;
+  --wa-text: #111b21;
+  --wa-text-secondary: #667781;
+  --wa-border: #e9edef;
+  --wa-hover: #f5f6f6;
+  --wa-danger: #ea0038;
+}
+
+.dark {
+  --wa-green: #00a884;
+  --wa-green-dark: #00a884;
+  --wa-green-light: #005c4b;
+  --wa-teal: #00a884;
+  --wa-teal-dark: #111b21;
+  --wa-blue: #53bdeb;
+  --wa-bg: #0b141a;
+  --wa-bg-pattern: #0b141a;
+  --wa-sidebar-bg: #111b21;
+  --wa-chat-bg: #0b141a;
+  --wa-header-bg: #202c33;
+  --wa-input-bg: #2a3942;
+  --wa-message-out: #005c4b;
+  --wa-message-in: #202c33;
+  --wa-text: #e9edef;
+  --wa-text-secondary: #8696a0;
+  --wa-border: #222d34;
+  --wa-hover: #202c33;
+  --wa-danger: #ea0038;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+  background-color: var(--wa-bg);
+  color: var(--wa-text);
+  overflow: hidden;
+}
+
+/* WhatsApp chat background pattern */
+.chat-bg {
+  background-color: var(--wa-chat-bg);
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h80v80H0z' fill='none'/%3E%3Cpath d='M20 20h5v5h-5zM40 40h5v5h-5zM60 60h5v5h-5zM10 50h5v5h-5zM50 10h5v5h-5zM30 70h5v5h-5zM70 30h5v5h-5z' fill='%23d1d7db' fill-opacity='0.15'/%3E%3C/svg%3E");
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Typing animation */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.typing-dot:nth-child(1) { animation: typing-dot 1.4s infinite 0s; }
+.typing-dot:nth-child(2) { animation: typing-dot 1.4s infinite 0.2s; }
+.typing-dot:nth-child(3) { animation: typing-dot 1.4s infinite 0.4s; }
+
+/* Message tail */
+.message-tail-out::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid var(--wa-message-out);
+  border-top: 8px solid transparent;
+  border-bottom: 0;
+}
+
+.message-tail-in::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-right: 8px solid var(--wa-message-in);
+  border-top: 8px solid transparent;
+  border-bottom: 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.15s ease-out;
+}

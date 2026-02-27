@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MemberRole {
+  ADMIN
+  MEMBER
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  bio       String?  @default("Hey there! I am using WhatsApp.")
+  lastSeen  DateTime @default(now())
+  isOnline  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversations ConversationMember[]
+  messages      Message[]
+  messageReads  MessageRead[]
+  reactions     MessageReaction[]
+  deletedMessages MessageDeletedFor[]
+  createdConversations Conversation[] @relation("CreatedBy")
+
+  @@index([email])
+}
+
+model Conversation {
+  id            String   @id @default(uuid())
+  name          String?
+  isGroup       Boolean  @default(false)
+  groupImage    String?
+  createdById   String
+  lastMessageAt DateTime @default(now())
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdBy   User                 @relation("CreatedBy", fields: [createdById], references: [id])
+  members     ConversationMember[]
+  messages    Message[]
+
+  @@index([lastMessageAt])
+}
+
+model ConversationMember {
+  id             String     @id @default(uuid())
+  conversationId String
+  userId         String
+  role           MemberRole @default(MEMBER)
+  joinedAt       DateTime   @default(now())
+  leftAt         DateTime?
+  isRemoved      Boolean    @default(false)
+  unreadCount    Int        @default(0)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model Message {
+  id                String      @id @default(uuid())
+  conversationId    String
+  senderId          String
+  body              String?
+  type              MessageType @default(TEXT)
+  replyToId         String?
+  forwardedFromId   String?
+  isEdited          Boolean     @default(false)
+  editedAt          DateTime?
+  deletedForEveryone Boolean    @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  conversation  Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User              @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo       Message?          @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies       Message[]         @relation("ReplyTo")
+  forwardedFrom Message?          @relation("ForwardedFrom", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwards      Message[]         @relation("ForwardedFrom")
+  reads         MessageRead[]
+  reactions     MessageReaction[]
+  attachments   Attachment[]
+  deletedFor    MessageDeletedFor[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model MessageRead {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+model MessageDeletedFor {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  deletedAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  messageId String
+  url       String
+  filename  String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
