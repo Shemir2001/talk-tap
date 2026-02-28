@@ -30,6 +30,17 @@ export type OnlineStatus = {
 
 export type MessageStatus = "sent" | "delivered" | "seen";
 
+export interface NotificationData {
+    id: string;
+    userId: string;
+    type: "MESSAGE" | "GROUP" | "SYSTEM";
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+    read: boolean;
+    createdAt: Date;
+}
+
 export interface SocketEvents {
     sendMessage: (data: {
         conversationId: string;
@@ -55,4 +66,5 @@ export interface SocketEvents {
     reactToMessage: (data: { messageId: string; emoji: string }) => void;
     messageReaction: (data: { messageId: string; conversationId: string; userId: string; emoji: string; action: "add" | "remove" }) => void;
     conversationUpdated: (conversation: ConversationWithDetails) => void;
+    notification: (data: NotificationData) => void;
 }

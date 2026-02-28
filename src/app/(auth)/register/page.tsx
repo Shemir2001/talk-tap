@@ -29,35 +29,36 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-[100dvh] flex items-center justify-center px-4 py-8"
-            style={{ background: "linear-gradient(135deg, var(--wa-teal) 0%, var(--wa-green-dark) 100%)" }}>
+            style={{ background: "linear-gradient(135deg, #1B2838 0%, #7C3AED 50%, #1B2838 100%)" }}>
             <div className="w-full max-w-md animate-fade-in">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
-                        <svg viewBox="0 0 39 39" width="48" height="48" fill="white">
-                            <path d="M10.7 32.8l.6.3c2.5 1.5 5.3 2.2 8.1 2.2 8.8 0 16-7.2 16-16 0-4.2-1.7-8.3-4.7-11.3s-7-4.7-11.3-4.7c-8.8 0-16 7.2-15.9 16.1 0 3 .9 5.9 2.4 8.4l.4.6-1.6 5.9 6-1.5z" />
-                            <path fill="var(--wa-teal)" d="M32.4 6.4C29 2.9 24.3 1 19.5 1 9.3 1 1.1 9.3 1.2 19.4c0 3.2.9 6.3 2.4 9.1L1 38l9.7-2.5c2.7 1.5 5.7 2.2 8.7 2.2 10.1 0 18.3-8.3 18.3-18.4 0-4.9-1.9-9.5-5.3-12.9zM19.5 34.6c-2.7 0-5.4-.7-7.7-2.1l-.6-.3-5.8 1.5L6.9 28l-.4-.6c-4.4-7.1-2.3-16.5 4.9-20.9s16.5-2.3 20.9 4.9 2.3 16.5-4.9 20.9c-2.3 1.5-5.1 2.3-7.9 2.3zm8.8-11.1l-1.1-.5s-1.6-.7-2.6-1.2c-.1 0-.2-.1-.3-.1-.3 0-.5.1-.7.3 0 0-.1.1-1.5 1.7-.1.2-.3.3-.5.3h-.1c-.1 0-.3-.1-.4-.2l-.5-.2c-1.1-.5-2.1-1.1-2.9-1.9-.2-.2-.5-.4-.7-.6-.7-.7-1.4-1.5-1.9-2.4l-.1-.2c-.1-.1-.1-.2-.2-.4 0-.2 0-.4.1-.5 0 0 .4-.5.7-.8.2-.2.3-.5.5-.7.2-.3.3-.7.2-1-.1-.5-1.3-3.2-1.6-3.8-.2-.3-.4-.4-.7-.5h-1.1c-.2 0-.4.1-.6.1l-.1.1c-.2.1-.4.3-.6.4-.2.2-.3.4-.5.6-.7.9-1.1 2-1.1 3.1 0 .8.2 1.6.5 2.3l.1.3c.9 1.9 2.1 3.6 3.7 5.1l.4.4c.3.3.6.5.8.8 2.1 1.8 4.5 3.1 7.2 3.8.3.1.7.1 1 .2h1c.5 0 1.1-.2 1.5-.4.3-.2.5-.2.7-.4l.2-.2c.2-.2.4-.3.6-.5s.3-.4.5-.6c.2-.4.3-.9.4-1.4v-.7s-.1-.1-.3-.2z" />
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                        style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-light text-white tracking-wide">WhatsApp Web</h1>
+                    <h1 className="text-2xl font-semibold text-white tracking-wide">MyChats</h1>
+                    <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.6)" }}>Create your account</p>
                 </div>
 
                 {/* Form Card */}
-                <div className="rounded-2xl shadow-2xl p-6 sm:p-8" style={{ backgroundColor: "var(--wa-sidebar-bg)" }}>
-                    <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: "var(--wa-text)" }}>
-                        Create your account
+                <div className="rounded-2xl shadow-2xl p-6 sm:p-8"
+                    style={{ backgroundColor: "var(--mc-sidebar-right)", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
+                    <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: "var(--mc-text)" }}>
+                        Get started
                     </h2>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg text-sm text-red-700 bg-red-50 border border-red-200 animate-fade-in">
+                        <div className="mb-4 p-3 rounded-xl text-sm text-red-700 bg-red-50 border border-red-200 animate-fade-in">
                             {error}
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: "var(--wa-text-secondary)" }}>
+                            <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: "var(--mc-text-secondary)" }}>
                                 Full name
                             </label>
                             <input
@@ -65,14 +66,14 @@ export default function RegisterPage() {
                                 name="name"
                                 type="text"
                                 required
-                                className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all focus:ring-2"
-                                style={{ borderColor: "var(--wa-border)", backgroundColor: "var(--wa-input-bg)", color: "var(--wa-text)" }}
+                                className="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
+                                style={{ borderColor: "var(--mc-border)", backgroundColor: "var(--mc-input-bg)", color: "var(--mc-text)" } as any}
                                 placeholder="John Doe"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: "var(--wa-text-secondary)" }}>
+                            <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: "var(--mc-text-secondary)" }}>
                                 Email address
                             </label>
                             <input
@@ -80,14 +81,14 @@ export default function RegisterPage() {
                                 name="email"
                                 type="email"
                                 required
-                                className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all focus:ring-2"
-                                style={{ borderColor: "var(--wa-border)", backgroundColor: "var(--wa-input-bg)", color: "var(--wa-text)" }}
+                                className="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
+                                style={{ borderColor: "var(--mc-border)", backgroundColor: "var(--mc-input-bg)", color: "var(--mc-text)" } as any}
                                 placeholder="you@example.com"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium mb-1.5" style={{ color: "var(--wa-text-secondary)" }}>
+                            <label htmlFor="password" className="block text-sm font-medium mb-1.5" style={{ color: "var(--mc-text-secondary)" }}>
                                 Password
                             </label>
                             <input
@@ -96,11 +97,11 @@ export default function RegisterPage() {
                                 type="password"
                                 required
                                 minLength={8}
-                                className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all focus:ring-2"
-                                style={{ borderColor: "var(--wa-border)", backgroundColor: "var(--wa-input-bg)", color: "var(--wa-text)" }}
+                                className="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
+                                style={{ borderColor: "var(--mc-border)", backgroundColor: "var(--mc-input-bg)", color: "var(--mc-text)" } as any}
                                 placeholder="••••••••"
                             />
-                            <p className="mt-1 text-xs" style={{ color: "var(--wa-text-secondary)" }}>
+                            <p className="mt-1 text-xs" style={{ color: "var(--mc-text-secondary)" }}>
                                 Min 8 chars, 1 uppercase, 1 lowercase, 1 number
                             </p>
                         </div>
@@ -108,8 +109,8 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 rounded-lg text-white font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50"
-                            style={{ backgroundColor: "var(--wa-green)" }}
+                            className="w-full py-3 rounded-xl text-white font-medium text-sm transition-all hover:opacity-90 disabled:opacity-50"
+                            style={{ backgroundColor: "var(--mc-primary)" }}
                         >
                             {loading ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -125,9 +126,9 @@ export default function RegisterPage() {
                         </button>
                     </form>
 
-                    <p className="mt-6 text-center text-sm" style={{ color: "var(--wa-text-secondary)" }}>
+                    <p className="mt-6 text-center text-sm" style={{ color: "var(--mc-text-secondary)" }}>
                         Already have an account?{" "}
-                        <Link href="/login" className="font-medium hover:underline" style={{ color: "var(--wa-green)" }}>
+                        <Link href="/login" className="font-medium hover:underline" style={{ color: "var(--mc-primary)" }}>
                             Sign in
                         </Link>
                     </p>

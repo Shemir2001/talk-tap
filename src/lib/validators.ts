@@ -46,7 +46,9 @@ export const createConversationSchema = z.object({
 export const updateProfileSchema = z.object({
     name: z.string().min(2).max(50).trim().optional(),
     bio: z.string().max(200).optional(),
-    avatar: z.string().url().optional(),
+    avatar: z.string().url().optional().or(z.literal("")),
+    phone: z.string().max(20).optional().or(z.literal("")),
+    username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers and underscores").optional().or(z.literal("")),
 });
 
 export const searchUsersSchema = z.object({

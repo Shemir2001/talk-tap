@@ -3,8 +3,8 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WhatsApp Web",
-  description: "A production-ready WhatsApp-like messaging application",
+  title: "MyChats - Messaging App",
+  description: "A production-ready real-time messaging application",
   icons: {
     icon: "/favicon.ico",
   },

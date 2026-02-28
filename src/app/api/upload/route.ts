@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { v4 as uuid } from "uuid";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(req: NextRequest) {
     const session = await auth();
@@ -29,6 +27,11 @@ export async function POST(req: NextRequest) {
             "image/png",
             "image/gif",
             "image/webp",
+            "audio/webm",
+            "audio/ogg",
+            "audio/mp3",
+            "audio/mpeg",
+            "audio/wav",
             "application/pdf",
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -41,14 +44,13 @@ export async function POST(req: NextRequest) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        const ext = path.extname(file.name);
-        const filename = `${uuid()}${ext}`;
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        // Determine folder based on type
+        const isImage = file.type.startsWith("image/");
+        const isAudio = file.type.startsWith("audio/");
+        const folder = isImage ? "whatsapp/images" : isAudio ? "whatsapp/audio" : "whatsapp/files";
+        const resourceType = isImage ? "image" as const : "raw" as const;
 
-        await mkdir(uploadDir, { recursive: true });
-        await writeFile(path.join(uploadDir, filename), buffer);
-
-        const url = `/uploads/${filename}`;
+        const { url } = await uploadToCloudinary(buffer, { folder, resourceType });
 
         return NextResponse.json({
             url,

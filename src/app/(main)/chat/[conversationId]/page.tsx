@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useSocket } from "@/hooks/useSocket";
 import { useMessages } from "@/hooks/useMessages";
 import { usePresence } from "@/hooks/usePresence";
+import { useVoiceCall } from "@/hooks/useVoiceCall";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { MessageList } from "@/components/chat/MessageList";
 import { MessageBubble } from "@/components/chat/MessageBubble";
@@ -28,6 +29,9 @@ export default function ConversationPage() {
     const { isUserOnline, getTypingUsersForConversation, startTyping, stopTyping } =
         usePresence(userId);
 
+    // Voice call from layout level - we use startCall here for the ChatHeader button only
+    const { startCall } = useVoiceCall(userId);
+
     // Fetch conversation details
     useEffect(() => {
         async function fetchConversation() {
@@ -48,9 +52,7 @@ export default function ConversationPage() {
     useEffect(() => {
         if (conversationId) {
             emit("joinConversation", conversationId);
-            return () => {
-                emit("leaveConversation", conversationId);
-            };
+            return () => { emit("leaveConversation", conversationId); };
         }
     }, [conversationId, emit]);
 
@@ -75,23 +77,20 @@ export default function ConversationPage() {
             if (!body.trim() && !attachments?.length) return;
             if (!userId) return;
 
-            // Determine type
-            let type = "TEXT";
+            let type: string = "TEXT";
             if (attachments?.length) {
                 const mime = attachments[0].mimeType;
                 if (mime.startsWith("image/")) type = "IMAGE";
-                else if (mime.startsWith("video/")) type = "VIDEO";
                 else if (mime.startsWith("audio/")) type = "AUDIO";
-                else type = "DOCUMENT";
+                else type = "FILE";
             }
 
-            // Optimistic message
             const optimisticMessage: MessageWithSender = {
                 id: `temp-${Date.now()}`,
                 conversationId,
                 senderId: userId,
                 body: body || null,
-                type,
+                type: type as any,
                 replyToId: replyTo?.id || null,
                 forwardedFromId: null,
                 isEdited: false,
@@ -105,6 +104,8 @@ export default function ConversationPage() {
                     email: session?.user?.email || "",
                     avatar: null,
                     bio: null,
+                    phone: null,
+                    username: null,
                     lastSeen: new Date(),
                     isOnline: true,
                     createdAt: new Date(),
@@ -123,13 +124,17 @@ export default function ConversationPage() {
 
             addOptimisticMessage(optimisticMessage);
 
-            // Emit via socket
             emit("sendMessage", {
                 conversationId,
                 body: body || "",
                 type,
-                replyToId: replyTo?.id,
-                attachments: attachments,
+                replyToId: replyTo?.id || null,
+                attachments: attachments?.map((a) => ({
+                    url: a.url,
+                    filename: a.filename,
+                    mimeType: a.mimeType,
+                    size: Math.round(a.size),
+                })),
             });
 
             setReplyTo(null);
@@ -137,30 +142,36 @@ export default function ConversationPage() {
         [conversationId, userId, session, replyTo, addOptimisticMessage, emit]
     );
 
-    const handleDelete = useCallback(
-        (messageId: string, forEveryone: boolean) => {
-            emit("deleteMessage", { messageId, forEveryone });
-        },
-        [emit]
-    );
+    const handleDelete = useCallback((messageId: string, forEveryone: boolean) => {
+        emit("deleteMessage", { messageId, forEveryone });
+    }, [emit]);
 
-    const handleEdit = useCallback(
-        (messageId: string, body: string) => {
-            emit("editMessage", { messageId, body });
-        },
-        [emit]
-    );
+    const handleEdit = useCallback((messageId: string, body: string) => {
+        emit("editMessage", { messageId, body });
+    }, [emit]);
 
-    const handleReact = useCallback(
-        (messageId: string, emoji: string) => {
-            emit("reactToMessage", { messageId, emoji });
-        },
-        [emit]
-    );
+    const handleReact = useCallback((messageId: string, emoji: string) => {
+        emit("reactToMessage", { messageId, emoji });
+    }, [emit]);
 
     const handleBack = useCallback(() => {
         router.push("/chat");
     }, [router]);
+
+    const handleVoiceCall = useCallback(() => {
+        if (!conversation || conversation.isGroup) return;
+        const other = conversation.members.find((m: any) => m.userId !== userId);
+        if (other) {
+            startCall(
+                other.userId,                           // peerId
+                other.user.name,                        // peerName (shown to caller)
+                other.user.avatar || undefined,         // peerAvatar
+                conversationId,                         // conversationId
+                session?.user?.name || "Unknown",       // callerName (shown to callee)
+                (session?.user as any)?.avatar,          // callerAvatar
+            );
+        }
+    }, [conversation, userId, conversationId, startCall, session]);
 
     return (
         <div className="flex flex-col h-full">
@@ -170,19 +181,12 @@ export default function ConversationPage() {
                 isOnline={isOnline}
                 typingUsers={typingUsers}
                 onBack={handleBack}
+                onVoiceCall={handleVoiceCall}
             />
-
-            <MessageList
-                messages={messages}
-                isLoading={isLoading}
-                hasMore={hasMore}
-                onLoadMore={loadMore}
-            >
+            <MessageList messages={messages} isLoading={isLoading} hasMore={hasMore} onLoadMore={loadMore}>
                 {messages.map((message, idx) => {
                     const isOwn = message.senderId === userId;
-                    const isFirst =
-                        idx === 0 || messages[idx - 1].senderId !== message.senderId;
-
+                    const isFirst = idx === 0 || messages[idx - 1].senderId !== message.senderId;
                     return (
                         <MessageBubble
                             key={message.id}
@@ -198,10 +202,9 @@ export default function ConversationPage() {
                     );
                 })}
             </MessageList>
-
             <MessageInput
                 onSend={handleSendMessage}
-                onTyping={() => startTyping(conversationId)}
+                onTyping={() => startTyping(conversationId, session?.user?.name || "")}
                 onStopTyping={() => stopTyping(conversationId)}
                 replyTo={replyTo}
                 onCancelReply={() => setReplyTo(null)}

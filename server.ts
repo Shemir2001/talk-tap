@@ -58,18 +58,24 @@ io.on("connection", async (socket) => {
     // Handle sending messages
     socket.on("sendMessage", async (data) => {
         try {
+            // Sanitize attachments - only include valid Prisma fields
+            const sanitizedAttachments = data.attachments?.map((att: any) => ({
+                url: att.url,
+                filename: att.filename,
+                mimeType: att.mimeType || "application/octet-stream",
+                size: typeof att.size === "number" ? Math.round(att.size) : 0,
+            }));
+
             const message = await prisma.message.create({
                 data: {
                     conversationId: data.conversationId,
                     senderId: userId,
-                    body: data.body,
+                    body: data.body || "",
                     type: data.type || "TEXT",
-                    replyToId: data.replyToId,
-                    attachments: data.attachments
-                        ? {
-                            create: data.attachments,
-                        }
-                        : undefined,
+                    ...(data.replyToId ? { replyToId: data.replyToId } : {}),
+                    ...(sanitizedAttachments?.length ? {
+                        attachments: { create: sanitizedAttachments },
+                    } : {}),
                 },
                 include: {
                     sender: {
@@ -127,6 +133,44 @@ io.on("connection", async (socket) => {
             io.to(`conversation:${data.conversationId}`).emit("conversationUpdated", {
                 conversationId: data.conversationId,
             });
+
+            // Create notifications for other members
+            const members = await prisma.conversationMember.findMany({
+                where: {
+                    conversationId: data.conversationId,
+                    userId: { not: userId },
+                    isRemoved: false,
+                },
+                select: { userId: true },
+            });
+
+            for (const member of members) {
+                try {
+                    const notification = await prisma.notification.create({
+                        data: {
+                            userId: member.userId,
+                            type: "MESSAGE",
+                            title: message.sender.name || "New message",
+                            body: data.body || "📎 Attachment",
+                            data: {
+                                conversationId: data.conversationId,
+                                messageId: message.id,
+                                senderId: userId,
+                            },
+                        },
+                    });
+
+                    // Emit to all sockets of the recipient
+                    const recipientSockets = onlineUsers.get(member.userId);
+                    if (recipientSockets) {
+                        for (const sid of recipientSockets) {
+                            io.to(sid).emit("notification", notification);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore notification creation errors
+                }
+            }
         } catch (error) {
             console.error("Send message error:", error);
             socket.emit("error", { message: "Failed to send message" });
@@ -303,6 +347,67 @@ io.on("connection", async (socket) => {
             }
         } catch (error) {
             console.error("React error:", error);
+        }
+    });
+
+    // ===== WebRTC Voice Call Signaling =====
+
+    // Initiate a call
+    socket.on("call-offer", (data: { to: string; offer: any; callerName: string; callerAvatar?: string; conversationId: string }) => {
+        const targetSockets = onlineUsers.get(data.to);
+        if (targetSockets) {
+            for (const sid of targetSockets) {
+                io.to(sid).emit("call-offer", {
+                    from: userId,
+                    offer: data.offer,
+                    callerName: data.callerName,
+                    callerAvatar: data.callerAvatar,
+                    conversationId: data.conversationId,
+                });
+            }
+        } else {
+            // User is offline
+            socket.emit("call-unavailable", { to: data.to, reason: "User is offline" });
+        }
+    });
+
+    // Answer a call
+    socket.on("call-answer", (data: { to: string; answer: any }) => {
+        const targetSockets = onlineUsers.get(data.to);
+        if (targetSockets) {
+            for (const sid of targetSockets) {
+                io.to(sid).emit("call-answer", { from: userId, answer: data.answer });
+            }
+        }
+    });
+
+    // Exchange ICE candidates
+    socket.on("ice-candidate", (data: { to: string; candidate: any }) => {
+        const targetSockets = onlineUsers.get(data.to);
+        if (targetSockets) {
+            for (const sid of targetSockets) {
+                io.to(sid).emit("ice-candidate", { from: userId, candidate: data.candidate });
+            }
+        }
+    });
+
+    // End a call
+    socket.on("call-end", (data: { to: string }) => {
+        const targetSockets = onlineUsers.get(data.to);
+        if (targetSockets) {
+            for (const sid of targetSockets) {
+                io.to(sid).emit("call-end", { from: userId });
+            }
+        }
+    });
+
+    // Reject a call
+    socket.on("call-reject", (data: { to: string }) => {
+        const targetSockets = onlineUsers.get(data.to);
+        if (targetSockets) {
+            for (const sid of targetSockets) {
+                io.to(sid).emit("call-reject", { from: userId });
+            }
         }
     });
 
